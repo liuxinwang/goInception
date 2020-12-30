@@ -14,6 +14,7 @@ import (
 	"time"
 	"unicode/utf8"
 
+	"github.com/axgle/mahonia"
 	mysqlDriver "github.com/go-sql-driver/mysql"
 	"github.com/hanchuanchuan/go-mysql/mysql"
 	"github.com/hanchuanchuan/go-mysql/replication"
@@ -1002,8 +1003,14 @@ func interpolateParams(query string, args []driver.Value, hexBlob bool) ([]byte,
 					buf = append(buf, b...)
 				}
 			} else {
-				buf = append(buf, '\'')
-				buf = escapeBytesBackslash(buf, []byte(v))
+				if utf8.ValidString(v) {
+					buf = append(buf, '\'')
+					buf = escapeBytesBackslash(buf, []byte(v))
+				} else {
+					buf = append(buf, '\'')
+					v = ConvertToString(v, "gbk", "utf-8")
+					buf = escapeBytesBackslash(buf, []byte(v))
+				}
 			}
 
 			buf = append(buf, '\'')
@@ -1045,6 +1052,15 @@ func interpolateParams(query string, args []driver.Value, hexBlob bool) ([]byte,
 		return nil, errors.New("driver: skip fast-path; continue as if unimplemented")
 	}
 	return buf, nil
+}
+
+func ConvertToString(src string, srcCode string, tagCode string) string {
+	srcCoder := mahonia.NewDecoder(srcCode)
+	srcResult := srcCoder.ConvertString(src)
+	tagCoder := mahonia.NewDecoder(tagCode)
+	_, cdata, _ := tagCoder.Translate([]byte(srcResult), true)
+	result := string(cdata)
+	return result
 }
 
 // reserveBuffer checks cap(buf) and expand buffer to len(buf) + appendSize.
