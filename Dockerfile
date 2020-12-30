@@ -4,6 +4,8 @@ FROM golang:1.12-alpine as builder
 ENV TZ=Asia/Shanghai
 ENV LANG="en_US.UTF-8"
 
+RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
+
 RUN apk add --no-cache \
     wget \
     make \
@@ -36,6 +38,8 @@ EXPOSE 4000
 
 ENV LANG="en_US.UTF-8"
 ENV TZ=Asia/Shanghai
+
+RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
 
 # ENV PERCONA_TOOLKIT_VERSION 3.0.4
 
